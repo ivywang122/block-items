@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { MdEdit } from 'react-icons/md';
+import './scss/styles.scss';
 import styled from 'styled-components';
 
 class App extends Component {
@@ -76,11 +77,20 @@ class App extends Component {
     return (
       <BlockWrapper key={item.key} top={top} left={left} width={width} height={height} padding={space / 2}>
         <div className="empty-block">
+          <div className="empty-icon-wrapper">
+            <MdEdit className="fa-icon" />
+            <div>Edit</div>
+          </div>
         </div>
       </BlockWrapper>
   
     );
   }
+}
+
+const colorSet = {
+  gray: '#c3c8d2',
+  deepGray: '#737d91',
 }
 
 const AppContainer = styled.div`
@@ -106,11 +116,30 @@ const BlockWrapper = styled.div`
   padding: 5px;
   z-index: 1;
   .empty-block{
+    display: flex;
+    justify-content: center;
+    align-items: center;
     position: relative;
 		width: 100%;
     height: 100%;
-    border: 2px dashed #c3c8d2;
+    border: 2px dashed ${colorSet.gray};
+    cursor: pointer;
+    &:hover{
+      background-color: rgba(0,0,0,.05);
+      .empty-icon-wrapper{
+        opacity: 1;
+      }
+    }
+    .empty-icon-wrapper{
+      text-align: center;
+      opacity: 0;
+      color: ${colorSet.deepGray};
+      .fa-icon{
+        font-size: 22px;
+      }
+    }
   }
 `;
+
 
 export default App;

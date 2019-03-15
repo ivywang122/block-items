@@ -1,0 +1,50 @@
+﻿body {
+  font-family: 'Microsoft JhengHei' !important;
+  box-sizing: border-box;
+  font-weight: 500;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: $white;
+  color: $gray-900;
+  letter-spacing: 0.05em;
+  font-size: 14px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Microsoft JhengHei' !important;
+  font-weight: bold;
+  margin: 0.5em 0;
+}
+
+@each $header, $size in $global-headings {
+  #{$header} {
+    font-size: $size;
+  }
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  box-sizing: border-box;
+  text-decoration: none;
+}
+
+img {
+  font-size: 0;
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+p {
+  margin: 0 0 0.3em;
+}
