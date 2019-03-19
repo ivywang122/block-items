@@ -24,7 +24,6 @@ class App extends Component {
   }
   componentDidMount() {
     this.buildEmptyItems();
-    setTimeout(() => this.getItems(), 300);
   }
   render() {
     const { maxWidth, maxHeight, maxrow, maxcolumn, space, items, emptyItems } = this.state;
@@ -62,7 +61,7 @@ class App extends Component {
         emptyItems = [...emptyItems, emptyItem];
       }
     }
-    this.setState({ emptyItems });
+    this.setState({ emptyItems }, () => setTimeout(() => this.getItems(), 300) );
   }
 
   _getItems() {

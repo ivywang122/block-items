@@ -8,45 +8,62 @@ class EditItems extends Component {
     this.renderItems = this._renderItems.bind(this);
 
     this.state = {
+      isLoading: false,
+      
       maxWidth: this.props.layoutSetting.maxWidth,
       maxHeight: this.props.layoutSetting.maxHeight,
       maxrow: this.props.layoutSetting.maxrow,
       maxcolumn: this.props.layoutSetting.maxcolumn,
       space: this.props.layoutSetting.space,
-      items: this.props.layoutSetting.items
+
+      items: this.props.layoutSetting.items,
+
+      isDragging: false,
+      isResizing: false,
+
+      helperX: 0,
+      helperY: 0,
+      helperWidth: 0,
+      helperHeight: 0,
+      isHelperOver: false,
+      isOccupy: false, 
     }
   }
   componentDidMount() {
+    this.setState({ isLoading: true });
   }
   componentWillUnmount() {
   }
   componentDidUpdate(prevProp, prevState) {
     let { layoutSetting } = this.props;
-    if (this.props.layoutSetting !== prevProp.layoutSetting) {
-      this.setState({
-        maxWidth: layoutSetting.maxWidth,
-        maxHeight: layoutSetting.maxHeight,
-        maxrow: layoutSetting.maxrow,
-        maxcolumn: layoutSetting.maxcolumn,
-        space: layoutSetting.space,
+    if (layoutSetting.items !== prevProp.layoutSetting.items) {
+      this.setState({ 
+        isLoading: false,
         items: layoutSetting.items
-      });
+      })
     }
   }
 
   render() {
-    const { items } = this.state;
-    return(
-      <div>
-        {items && items.length > 0 ?
-          items.map((item, index) => {
-            return this.renderItems(item, index);
-          })
-          :
-          null
-        }
-      </div>
-    );
+    const { isLoading, items } = this.state;
+    if (isLoading) {
+      return (
+        <LoadingConatiner>Loading...</LoadingConatiner>
+      );
+    }else {
+      return(
+        <div>
+          {items && items.length > 0 ?
+            items.map((item, index) => {
+              return this.renderItems(item, index);
+            })
+            :
+            null
+          }
+        </div>
+      );
+    }
+    
   }
 
   _renderItems(item, index) {
@@ -64,7 +81,6 @@ class EditItems extends Component {
     left = _width * item.column;
     width = _width * item.sizeX;
     height = _height * item.sizeY;
-    
     return (
       <BrickContainer key={item.id}>
         <Rnd
@@ -75,20 +91,36 @@ class EditItems extends Component {
             width: width,
             height: height
           }}
+          z={2}
+          minWidth={_width}
+          minHeight={_height}
         >
           <BrickWrapper padding={space}>
-            <Brick imgUrl={imgUrl} />
+            <Brick imgUrl={imgUrl} />   
           </BrickWrapper>
         </Rnd>
       </BrickContainer>
     );
+  
+    
   }
 }
+
+const LoadingConatiner = styled.div`
+  position: relative;
+  z-index: 20;
+  width: 1080px;
+  height: 540px;
+  text-align: center;
+  line-height: 540px;
+  font-size: 120px;
+  color: #fefefe;
+  background-color: rgba(0,0,0,0.2);
+`;
 
 const BrickContainer = styled.div`
   position: absolute;
   z-index: 2;
-
 `;
 const BrickWrapper = styled.div`
   position: absolute;
