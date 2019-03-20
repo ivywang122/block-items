@@ -6,6 +6,12 @@ class EditItems extends Component {
   constructor(props) {
     super(props)
     this.renderItems = this._renderItems.bind(this);
+    this.onDragStart = this._onDragStart.bind(this);
+    this.onDrag = this._onDrag.bind(this);
+    this.onDragStop = this._onDragStop.bind(this);
+
+    this.rndRefs = {};
+    this.rndDelayTimeout = undefined;
 
     this.state = {
       isLoading: false,
@@ -33,6 +39,7 @@ class EditItems extends Component {
     this.setState({ isLoading: true });
   }
   componentWillUnmount() {
+    this.onMouseoverResizeHandler('remove');
   }
   componentDidUpdate(prevProp, prevState) {
     let { layoutSetting } = this.props;
@@ -40,7 +47,7 @@ class EditItems extends Component {
       this.setState({ 
         isLoading: false,
         items: layoutSetting.items
-      })
+      }, () => this.onMouseoverResizeHandler('add'))
     }
   }
 
@@ -67,7 +74,7 @@ class EditItems extends Component {
   }
 
   _renderItems(item, index) {
-    let { space, maxWidth, maxcolumn, maxHeight, maxrow } = this.state;
+    let { space, maxWidth, maxcolumn, maxHeight, maxrow, isDragging } = this.state;
     
     let _width = maxWidth / maxcolumn,
       _height = maxHeight / maxrow,
@@ -81,9 +88,11 @@ class EditItems extends Component {
     left = _width * item.column;
     width = _width * item.sizeX;
     height = _height * item.sizeY;
+
     return (
-      <BrickContainer key={item.id}>
+      <BrickContainer key={item.id} isDragging={isDragging} zIndex={item.zIndex}>
         <Rnd
+          ref={el => this.rndRefs[item.id] = el}
           className="item-brick"
           default={{
             x: left,
@@ -91,9 +100,13 @@ class EditItems extends Component {
             width: width,
             height: height
           }}
-          z={2}
           minWidth={_width}
           minHeight={_height}
+          onDragStart={(event, data) => this.onDragStart(event, data, item)}
+          onDrag={(event, data) => this.onDrag(event, data, item)}
+          onDragStop={(event, data) => this.onDragStop(event, data, item)}
+          resizeHandleStyles={resizeHandleStyles}
+          resizeHandleClasses={resizeHandleClasses}
         >
           <BrickWrapper padding={space}>
             <Brick imgUrl={imgUrl} />   
@@ -101,9 +114,156 @@ class EditItems extends Component {
         </Rnd>
       </BrickContainer>
     );
-  
-    
   }
+
+  _onDragStart(event, data, item) {
+    let { items } = this.state;
+    for(let i = 0; i < items.length; i++) {
+      if(items[i].id === item.id) items[i].zIndex = 2000;
+    }
+    this.setState({ items })
+  }
+
+  _onDrag(event, data, item) {
+    let { items, isDragging, maxWidth, maxHeight, maxcolumn, maxrow } = this.state;
+    if(!isDragging) this.setState({ isDragging: true });
+    this.rndDelayTimeout = setTimeout(() => {
+      let _width = maxWidth / maxcolumn,
+        _height = maxHeight / maxrow,
+        width = _width * item.sizeX,
+        height = _height * item.sizeY,
+        column = Math.round(data.x / _width),
+        row = Math.round(data.y / _height),
+        top = row * _height,
+        left = column * _width,
+        isDraggingItem = {
+          row: row,
+          column: column,
+          sizeX: item.sizeX,
+          sizeY: item.sizeY
+        },
+        isOccupy = false;
+        for(let i = 0; i < items.length; i++) {
+          if(item.id === items[i].id) {
+
+          }
+        }
+        this.setState({  })
+    }, 100);
+  }
+
+  _onDragStop(event, data, item) {
+    let { items, isDragging, maxWidth, maxHeight, maxcolumn, maxrow } = this.state;
+    let ref = this.rndRefs[item.id];
+    let _width = maxWidth / maxcolumn,
+      _height = maxHeight / maxrow,
+      width = _width * item.sizeX,
+      height = _height * item.sizeY,
+      column = Math.round(data.x / _width),
+      row = Math.round(data.y / _height),
+      top = row * _height,
+      left = column * _width,
+      isDraggingItem = {
+        row: row,
+        column: column,
+        sizeX: item.sizeX,
+        sizeY: item.sizeY
+      },
+      isOccupy = false;
+
+    if(row < 0 || column < 0 || row + item.sizeY > maxrow || column + item.sizeX > maxcolumn) {
+      ref.updatePosition({
+        x: item.column * _width,
+        y: item.row * _height
+      });
+    }else {
+      for (let i = 0; i < items.length; i++) {
+        if (item.id === items[i].id) {
+          items[i].row = row;
+          items[i].column = column;
+          items[i].zIndex = 2;
+        }
+      }
+      ref.updatePosition({ x: left, y: top });
+    }
+
+    this.setState({ items, isDragging: false })
+  }
+
+  onMouseoverResizeHandler(type) {
+    let handles = document.getElementsByClassName('handle');
+
+    if(handles && handles.length > 0) {
+      for(let i = 0; i < handles.length; i++){
+        if(type === 'add') {
+          handles[i].addEventListener('mouseover', event => this.handlesEventListenerIn(event));
+          handles[i].addEventListener('mouseout', event => this.handlesEventListenerOut(event));
+        }else {
+          handles[i].removeEventListener('mouseover', event => this.handlesEventListenerIn(event));
+          handles[i].removeEventListener('mouseout', event => this.handlesEventListenerOut(event));
+        }
+      }
+    }
+  }
+
+  handlesEventListenerIn(event) {
+    let brick = event.currentTarget.parentElement,
+      handleNodes = brick.children;
+    for (let i = 0; i < handleNodes.length; i++) {
+      if (handleNodes[i].classList.contains('handle')) {
+        handleNodes[i].style.opacity = 1;
+      }
+    }
+  }
+
+  handlesEventListenerOut(event) {
+    let brick = event.currentTarget.parentElement,
+      handleNodes = brick.children;
+    for (let i = 0; i < handleNodes.length; i++) {
+      if (handleNodes[i].classList.contains('handle')) {
+        handleNodes[i].style.opacity = 0;
+      }
+    }
+  }
+}
+
+
+const resizeHandleStyles = {
+  bottom: { 
+    bottom: 0,
+    background: 'linear-gradient(90deg, transparent 30%, #fff 30%)',
+    backgroundSize: '30px 100%'
+  },
+  top: { 
+    top: 0,
+    background: 'linear-gradient(90deg, transparent 30%, #fff 30%)',
+    backgroundSize: '30px 100%'
+  },
+  left: { 
+    left: 0,
+    background: 'linear-gradient(transparent 30%, #fff 30%)',
+    backgroundSize: '100% 30px'
+  },
+  right: {
+    right: 0,
+    background: 'linear-gradient(transparent 30%, #fff 30%)',
+    backgroundSize: '100% 30px'
+  },
+  bottomLeft: { left: 0, bottom: 0 },
+  bottomRight: { right: 0, bottom: 0 },
+  topLeft: { left: 0, top: 0 },
+  topRight: { right: 0, top: 0 }
+}
+
+const resizeHandleClasses = {
+  bottom: 'handle handle-bottom',
+  bottomLeft: 'handle handle-bottom-left',
+  botttomRight: 'handle handle-bottom-right',
+  left: 'handle handle-left',
+  right: 'handle handle-right',
+  top: 'handle handle-top',
+  topLeft: 'handle handle-top-left',
+  topRight: 'handle handle-top-right'
 }
 
 const LoadingConatiner = styled.div`
@@ -118,16 +278,6 @@ const LoadingConatiner = styled.div`
   background-color: rgba(0,0,0,0.2);
 `;
 
-const BrickContainer = styled.div`
-  position: absolute;
-  z-index: 2;
-`;
-const BrickWrapper = styled.div`
-  position: absolute;
-	width: 100%;
-	height: 100%;
-  padding: ${props => props.padding ? props.padding / 2 +'px' : 0 };
-`;
 const Brick = styled.div`
   position: relative;
   height: 100%;
@@ -139,4 +289,26 @@ const Brick = styled.div`
   overflow: hidden;
   background-image: url(${props => props.imgUrl ? props.imgUrl : null});
 `;
+
+const BrickWrapper = styled.div`
+  position: absolute;
+	width: 100%;
+	height: 100%;
+  padding: ${props => props.padding ? props.padding / 2 + 'px' : 0};
+`;
+
+const BrickContainer = styled.div`
+  position: absolute;
+  z-index: ${props => props.zIndex ? props.zIndex : 2};
+  .item-brick:hover ${Brick}{
+    box-shadow: ${props => props.isDragging ? '0 8px 20px 0 rgba(0,0,0,.5)' : '0 0 20px 0 rgba(0,0,0,.5)'};
+  }
+
+  .handle{
+    opacity: 0;
+    transition: .25s;
+  }
+`;
+
+
 export default EditItems
