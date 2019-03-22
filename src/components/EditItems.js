@@ -9,6 +9,9 @@ class EditItems extends Component {
     this.onDragStart = this._onDragStart.bind(this);
     this.onDrag = this._onDrag.bind(this);
     this.onDragStop = this._onDragStop.bind(this);
+    this.onResizeStart = this._onResizeStart.bind(this);
+    this.onResize = this._onResize.bind(this);
+    this.onResizeStop = this._onResizeStop.bind(this);
 
     this.rndRefs = {};
     this.rndDelayTimeout = undefined;
@@ -105,6 +108,9 @@ class EditItems extends Component {
           onDragStart={(event, data) => this.onDragStart(event, data, item)}
           onDrag={(event, data) => this.onDrag(event, data, item)}
           onDragStop={(event, data) => this.onDragStop(event, data, item)}
+          onResizeStart={(event, dir, ref, delta) => this.onResizeStart(event, dir, ref, item)}
+          onResize={(event, dir, ref, delta) => this.onResize(event, dir, ref, delta, item)}
+          onResizeStop={(event, dir, ref, delta) => this.onResizeStop(event, dir, ref, delta, item)}
           resizeHandleStyles={resizeHandleStyles}
           resizeHandleClasses={resizeHandleClasses}
         >
@@ -127,6 +133,8 @@ class EditItems extends Component {
   _onDrag(event, data, item) {
     let { items, isDragging, maxWidth, maxHeight, maxcolumn, maxrow } = this.state;
     if(!isDragging) this.setState({ isDragging: true });
+
+    clearTimeout(this.rndDelayTimeout);
     this.rndDelayTimeout = setTimeout(() => {
       let _width = maxWidth / maxcolumn,
         _height = maxHeight / maxrow,
@@ -153,7 +161,7 @@ class EditItems extends Component {
   }
 
   _onDragStop(event, data, item) {
-    let { items, isDragging, maxWidth, maxHeight, maxcolumn, maxrow } = this.state;
+    let { items, maxWidth, maxHeight, maxcolumn, maxrow } = this.state;
     let ref = this.rndRefs[item.id];
     let _width = maxWidth / maxcolumn,
       _height = maxHeight / maxrow,
@@ -188,6 +196,45 @@ class EditItems extends Component {
     }
 
     this.setState({ items, isDragging: false })
+  }
+
+  _onResizeStart(event, dir, ref, item) {
+    let { items } = this.state;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].id === item.id) items[i].zIndex = 2000;
+    }
+    this.setState({ items })
+  }
+
+  _onResize(event, dir, ref, delta, item) {
+    let { items, isResizing, maxWidth, maxHeight, maxcolumn, maxrow } = this.state;
+    if (!isResizing) this.setState({ isResizing: true });
+
+    clearTimeout(this.rndDelayTimeout);
+    this.rndDelayTimeout = setTimeout(() => {
+      let _width = maxWidth / maxcolumn,
+        _height = maxHeight / maxrow,
+        sizeX = item.sizeX,
+        sizeY = item.sizeY,
+        width = sizeX * _width,
+        height = sizeY * _height,
+        column = item.column,
+        row = item.row,
+        top = row * _height,
+        left = column * _width,
+        isResizingItem = {
+          row: row,
+          column: column,
+          sizeX: item.sizeX,
+          sizeY: item.sizeY
+        },
+        isOccupy = false;
+        
+    }, 100)
+  }
+
+  _onResizeStop(event, dir, ref, delta, item) {
+
   }
 
   onMouseoverResizeHandler(type) {
