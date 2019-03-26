@@ -229,6 +229,21 @@ class EditItems extends Component {
           sizeY: item.sizeY
         },
         isOccupy = false;
+
+      if (dir === 'topLeft' || dir === 'top' || dir === 'topRight') {
+        top -= delta.height;
+        height += delta.height;
+
+      } else if (dir === 'bottomLeft' || dir === 'bottom' || dir === 'bottomRight') {
+        height += delta.height;
+
+      } else if (dir === 'topLeft' || dir === 'left' || dir === 'bottomLeft') {
+        left -= delta.width;
+        width += delta.width;
+
+      } else if (dir === 'bottomRight' || dir === 'right' || dir === 'topRight') {
+        width += delta.width;
+      }
         
     }, 100)
   }
