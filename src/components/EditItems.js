@@ -195,10 +195,11 @@ class EditItems extends Component {
       ref.updatePosition({ x: left, y: top });
     }
 
+
     this.setState({ items, isDragging: false })
   }
 
-  _onResizeStart(event, dir, ref, item) {
+  _onResizeStart(event, dir, refEle, item) {
     let { items } = this.state;
     for (let i = 0; i < items.length; i++) {
       if (items[i].id === item.id) items[i].zIndex = 2000;
@@ -206,7 +207,7 @@ class EditItems extends Component {
     this.setState({ items })
   }
 
-  _onResize(event, dir, ref, delta, item) {
+  _onResize(event, dir, refEle, delta, item) {
     let { items, isResizing, maxWidth, maxHeight, maxcolumn, maxrow } = this.state;
     if (!isResizing) this.setState({ isResizing: true });
 
@@ -244,11 +245,87 @@ class EditItems extends Component {
       } else if (dir === 'bottomRight' || dir === 'right' || dir === 'topRight') {
         width += delta.width;
       }
+
+      row = Math.round(top / _height);
+      column = Math.round(left / _width);
+      sizeX = Math.round(width / _width);
+      sizeY = Math.round(height / _height);
+      top = row * _height;
+      left = column * _width;
+      width = sizeX * _width;
+      height = sizeY * _height;
+
+      this.setState({});
         
     }, 100)
   }
 
-  _onResizeStop(event, dir, ref, delta, item) {
+  _onResizeStop(event, dir, refEle, delta, item) {
+    let { items, maxWidth, maxHeight, maxcolumn, maxrow } = this.state;
+    let ref = this.rndRefs[item.id];
+    let _width = maxWidth / maxcolumn,
+      _height = maxHeight / maxrow,
+      sizeX = item.sizeX,
+      sizeY = item.sizeY,
+      width = sizeX * _width,
+      height = sizeY * _height,
+      column = item.column,
+      row = item.row,
+      top = row * _height,
+      left = column * _width,
+      isOccupy = false;
+
+    if (dir === 'topLeft' || dir === 'top' || dir === 'topRight') {
+      top -= delta.height;
+      height += delta.height;
+    } else if (dir === 'bottomLeft' || dir === 'bottom' || dir === 'bottomRight') {
+      height += delta.height;
+    } else if (dir === 'topLeft' || dir === 'left' || dir === 'bottomLeft') {
+      left -= delta.width;
+      width += delta.width;
+    } else if (dir === 'bottomRight' || dir === 'right' || dir === 'topRight') {
+      width += delta.width;
+    }
+
+    row = Math.round(top / _height);
+    column = Math.round(left / _width);
+    sizeX = Math.round(width / _width);
+    sizeY = Math.round(height / _height);
+    top = row * _height;
+    left = column * _width;
+    width = sizeX * _width;
+    height = sizeY * _height;
+    
+    let _resizeItem = {
+      row: row,
+      column: column,
+      sizeX: sizeX,
+      sizeY: sizeY,
+    };
+
+    if (row < 0 || column < 0 || row >= maxrow || column >= maxcolumn || column + sizeX > maxcolumn || row + sizeY > maxrow) {
+      ref.updatePosition({
+        x: item.column * _width,
+        y: item.row * _height
+      });
+      ref.updateSize({
+        width: item.sizeX * _width,
+        height: item.sizeY * _height
+      });
+    } else {
+      for (let i = 0; i < items.length; i++) {
+        if (item.id === items[i].id) {
+          items[i].row = row;
+          items[i].column = column;
+          items[i].sizeX = sizeX;
+          items[i].sizeY = sizeY;
+          // _resizeItem = items[i];
+        }
+      }
+      ref.updatePosition({ x: left, y: top });
+      ref.updateSize({ width: width, height: height });
+    }
+    this.setState({ items, isResizing: false })
 
   }
 
